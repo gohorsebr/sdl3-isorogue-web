@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#09080d">
+  <link rel="icon" href="data:,">
+  <title>IsoRogue</title>
+  <style>
+    html, body {
+      margin: 0; padding: 0; width: 100%; height: 100%;
+      background: #09080d; overflow: hidden;
+      overscroll-behavior: none;
+      -webkit-user-select: none; user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* SDL follows the canvas' CSS size for resizable windows. */
+    #canvas {
+      position: fixed; inset: 0;
+      width: 100vw; height: 100vh; height: 100dvh;
+      display: block; border: 0; outline: none;
+      touch-action: none;
+    }
+    #status {
+      position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+      color: #c9c3d6; font: 16px/1.4 ui-monospace, Menlo, Consolas, monospace; pointer-events: none;
+    }
+    #fs {
+      position: fixed; left: 50%; top: 8px; transform: translateX(-50%); z-index: 2;
+      width: 38px; height: 38px; border-radius: 8px;
+      border: 1px solid #ffffff40; background: #00000055; color: #ffffffb0;
+      font: 20px/1 sans-serif; cursor: pointer; display: none;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
+  <div id="status">Loading…</div>
+  <button id="fs" title="Fullscreen" aria-label="Fullscreen">⛶</button>
+  <script>
+    var statusEl = document.getElementById('status');
+    var fsBtn = document.getElementById('fs');
+    var canvas = document.getElementById('canvas');
+
+    var Module = {
+      canvas: canvas,
+      print: function (t) { console.log(t); },
+      printErr: function (t) { console.warn(t); },
+      setStatus: function (t) { statusEl.textContent = t || ''; statusEl.style.display = t ? 'flex' : 'none'; },
+      monitorRunDependencies: function (left) { if (!left) Module.setStatus(''); },
+      onRuntimeInitialized: function () { Module.setStatus(''); canvas.focus(); }
+    };
+    Module.setStatus('Loading…');
+    window.onerror = function (msg) { Module.setStatus('Error: ' + msg); };
+
+    // Fullscreen must be requested from a real user gesture, so it lives in HTML.
+    var root = document.documentElement;
+    var fsSupported = !!(root.requestFullscreen || root.webkitRequestFullscreen);
+    if (fsSupported) fsBtn.style.display = 'block';
+    fsBtn.addEventListener('click', function () {
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+      } else {
+        (root.requestFullscreen || root.webkitRequestFullscreen).call(root);
+        if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(function () {});
+      }
+      canvas.focus();
+    });
+    document.addEventListener('fullscreenchange', function () {
+      fsBtn.style.opacity = document.fullscreenElement ? '0.35' : '1';
+    });
+    // Keep keyboard focus on the game when clicking it.
+    canvas.addEventListener('pointerdown', function () { canvas.focus(); });
+  </script>
+  {{{ SCRIPT }}}
+</body>
+</html>
